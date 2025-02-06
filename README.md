@@ -54,5 +54,4 @@ cd your-repo
    ```
 
 Your application should now be running! 🎉
-```
 
