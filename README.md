@@ -14,7 +14,7 @@ Ensure you have the following installed:
 ```sh
 git clone https://github.com/your-username/your-repo.git
 cd your-repo
-
+```
 ## Running the Server
 
 1. Navigate to the `server` directory:
