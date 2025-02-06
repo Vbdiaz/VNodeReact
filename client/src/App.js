@@ -1,25 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';  // No need for useLocation
-import Table from './Table';
-import NewPage from './NewPage';  // Import the NewPage component
+import Table from './components/Table';
 
 const App = () => {
+    // State hooks for storing data, user input, and messages
     const [data, setData] = useState([]);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
 
-    // Fetch data for the table
-    useEffect(() => {
-        fetch("http://localhost:3001/data")
-            .then(response => response.json())
-            .then(data => setData(data))
-            .catch(error => console.error("Error fetching data:", error));
-    }, [data]);
+    // Function to fetch data for the table
+    const fetchData = async () => {
+        try {
+            const response = await fetch("http://localhost:3001/data");
+            const data = await response.json();
+            setData(data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
 
-    // Handle the form submission to register a user
+    // Fetch data for the table on component mount
+    useEffect(() => {
+        fetchData(); // Fetch data initially
+    }, []); 
+
+    // Handle the form submission for registering a user
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent page reload on form submission
 
         const user = { username, password };
 
@@ -27,74 +34,63 @@ const App = () => {
             const response = await fetch('http://localhost:3001/register', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json', // Set the content type for the request
                 },
-                body: JSON.stringify(user),
+                body: JSON.stringify(user), // Convert user data to JSON
             });
 
             const result = await response.json();
-            console.log(result);
+
             if (result.success) {
+                // Handle success response
                 setMessage("User registered successfully!");
-                setUsername('');
+                setUsername(''); // Reset input fields
                 setPassword('');
+                fetchData(); // Re-fetch the data after successful registration
             } else {
+                // Handle error response from server
                 setMessage(`Error: ${result.message}`);
             }
         } catch (error) {
+            // Handle any errors during the fetch request
             console.error('Error:', error);
             setMessage('Error while submitting data');
         }
     };
 
     return (
-        <Router> {/* Wrap everything inside Router */}
-            <div>
-                {/* Conditionally render the button */}
-                <Routes>
-                    {/* NewPage route */}
-                    <Route path="/new-page" element={<NewPage />} />  {/* Render NewPage component when '/new-page' route is matched */}
+        <div>
+            <h1>Database Table</h1>
+            {/* Display table with fetched data */}
+            <Table data={data} />
 
-                    {/* Main Page route */}
-                    <Route path="/" element={
-                        <div>
-                            <h1>Database Table</h1>
-                            <Table data={data} />
+            <h2>Register User</h2>
+            {/* Form to register a user */}
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label>Username:</label>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)} // Update username state
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)} // Update password state
+                        required
+                    />
+                </div>
+                <button type="submit">Submit</button>
+            </form>
 
-                            <h2>Register User</h2>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Username:</label>
-                                    <input
-                                        type="text"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label>Password:</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <button type="submit">Submit</button>
-                            </form>
-
-                            {message && <p>{message}</p>}
-
-                            {/* Only show the button on the main page */}
-                            <Link to="/new-page">
-                                <button>Go to New Page</button>
-                            </Link>
-                        </div>
-                    } /> {/* Default content on main route */}
-                </Routes>
-            </div>
-        </Router>
+            {/* Display message based on submission result */}
+            {message && <p>{message}</p>}
+        </div>
     );
 };
 
